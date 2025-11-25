@@ -1,15 +1,13 @@
-import { useState } from 'react'
+import GameManager from './components/GameManager';
 
 import './App.css'
 
 function App() {
-
-
-  return (
-    <>
-      
-    </>
-  )
+    return (
+    <div>
+      <GameManager />
+    </div>
+  );
 }
 
 export default App

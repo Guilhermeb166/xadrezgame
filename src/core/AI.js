@@ -1,4 +1,8 @@
-import Stockfish from 'stockfish'
+import initStockfish from "stockfish.wasm";
+
+const engine = await initStockfish();
+engine.postMessage("uci");
+engine.onmessage = console.log;
 /* Estou trazendo para dentro do código o Stockfish, que é uma IA de xadrez muito famosa e muito forte.*/
 class AIEngine {
     constructor() {

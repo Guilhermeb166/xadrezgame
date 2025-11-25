@@ -1,0 +1,91 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.title {
+  font-size: 3rem;
+  color: white;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.message {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: white;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 15px 30px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gameInfo {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  color: white;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 10px 20px;
+  border-radius: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.colorIndicator {
+  font-weight: bold;
+}
+
+.turnIndicator {
+  font-style: italic;
+}
+
+.boardContainer {
+  margin-top: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.resetButton {
+  margin-top: 30px;
+  padding: 15px 40px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.resetButton:hover {
+  background: #ff5252;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.resetButton:active {
+  transform: translateY(-1px);
+}

@@ -8,7 +8,7 @@ class Game {
     }
 
     reset(){
-        this.gane.reset()
+        this.game.reset()
         //* Reinicia o jogo
     }
     

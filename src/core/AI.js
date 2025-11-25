@@ -1,72 +1,99 @@
-import initStockfish from "stockfish.wasm";
-
-const engine = await initStockfish();
-engine.postMessage("uci");
-engine.onmessage = console.log;
-/* Estou trazendo para dentro do código o Stockfish, que é uma IA de xadrez muito famosa e muito forte.*/
 class AIEngine {
     constructor() {
-        this.engine = Stockfish() // Cria uma nova instância da IA Stockfish, uma cópia dela rodando dentro do navegador.
-        this.engine.postMessage("uci")
-        /*O Stockfish funciona usando um “protocolo” chamado UCI
-        Isso é só para avisar ao robô que queremos conversar usando esse idioma */
+        this.engine = null;
+        this.ready = false;
+        this.initEngine();
     }
 
-    calculateMove(fen, depth = 12) {
+    initEngine() {
+        console.log("🔧 Iniciando carregamento do Stockfish...");
+        
+        // Tenta carregar via Web Worker (mais moderno)
+        try {
+            // Cria um Web Worker inline com o Stockfish
+            const workerCode = `
+                importScripts('https://cdnjs.cloudflare.com/ajax/libs/stockfish.js/10.0.2/stockfish.js');
+                var engine = STOCKFISH();
+                engine.postMessage = self.postMessage.bind(self);
+                self.onmessage = function(e) {
+                    engine.postMessage(e.data);
+                };
+            `;
+            
+            const blob = new Blob([workerCode], { type: 'application/javascript' });
+            const workerUrl = URL.createObjectURL(blob);
+            
+            this.engine = new Worker(workerUrl);
+            this.engine.postMessage("uci");
+            
+            this.engine.onmessage = (e) => {
+                if (e.data.includes("uciok")) {
+                    this.ready = true;
+                    console.log("✅ Stockfish carregado via Worker!");
+                }
+            };
+            
+        } catch (error) {
+            console.error("❌ Erro ao criar Worker:", error);
+            // Fallback: usar IA simples
+            this.useFallbackAI();
+        }
+    }
+
+    useFallbackAI() {
+        console.log("🎲 Usando IA simplificada (movimentos aleatórios)");
+        this.ready = true;
+        this.engine = { isFallback: true };
+    }
+
+    async waitForReady() {
+        let attempts = 0;
+        while (!this.ready && attempts < 100) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
+        }
+        
+        if (!this.ready) {
+            console.log("⚠️ Timeout - usando IA simplificada");
+            this.useFallbackAI();
+        }
+    }
+
+    async calculateMove(fen, depth = 12) {
+        await this.waitForReady();
+        
+        // Se estiver usando fallback AI (aleatória)
+        if (this.engine.isFallback) {
+            return this.calculateRandomMove(fen);
+        }
+        
+        // Usa Stockfish real
         return new Promise((resolve) => {
-            this.engine.postMessage(`position fen ${fen}`)
-            /*Isso envia para a IA o seguinte comando: “Essa é a posição atual do tabuleiro.”
-            A IA agora sabe como está a partida. */
+            this.engine.postMessage(`position fen ${fen}`);
+            this.engine.postMessage(`go depth ${depth}`);
 
-            this.engine.postMessage(`go depth ${depth}`)
-            /*Quanto maior a profundidade (depth):
-            mais o robô pensa
-            mais forte ele joga
-            mais devagar ele responde
-            depth = 12 é um bom equilíbrio para navegador. */
+            this.engine.onmessage = (event) => {
+                const text = event.data || event;
+                const match = text.match(/bestmove\s(\S+)/);
+                
+                if (match) {
+                    resolve(match[1]);
+                }
+            };
+        });
+    }
 
-            this.engine.onmessage = (event) => {//Quando a IA mandar uma resposta, execute esta função aqui.
-
-                const text = event.data || event
-                //Ele está tentando pegar o conteúdo da mensagem recebida,
-                // mas como esse conteúdo pode vir em formatos diferentes, ele usa um “plano A” e um “plano B”.
-
-                const match = text.match(/bestmove\s(\S+)/)
-                /*Isso verifica se o texto da IA contém:
-                 “bestmove XXXX”
-                Se contém, significa que a IA terminou de pensar. */
-
-                if (match) resolve(match[1])
-                //Isso devolve a jogada da IA para o resto do jogo.
-            }
-        })
+    calculateRandomMove(fen) {
+        // IA simples: movimento aleatório válido
+        const Chess = window.Chess || require('chess.js').Chess;
+        const tempGame = new Chess(fen);
+        const moves = tempGame.moves({ verbose: true });
+        
+        if (moves.length === 0) return null;
+        
+        const randomMove = moves[Math.floor(Math.random() * moves.length)];
+        return `${randomMove.from}${randomMove.to}`;
     }
 }
 
 export default new AIEngine();
-/*
-1- calculateMove(fen, depth = 12)
-Isso é uma função que:
-
-recebe o estado atual do tabuleiro (FEN = texto que representa a posição)
-
-manda isso para a IA
-
-espera a IA pensar
-
-pega a resposta
-
-devolve para o jogo 
-
-
-2- return new Promise((resolve) => { ... })
-O que é isso?
-
-A IA não responde na hora.
-
-Ela precisa pensar um pouco.
-
-Então usamos uma Promise, que é um jeito de dizer:
-
- “Espere a IA terminar de pensar, depois eu te aviso a resposta.”
-*/
